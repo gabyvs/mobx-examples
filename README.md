@@ -1,4 +1,6 @@
-Sample project to explore some concepts from MobX
+Sample project to explore some concepts from MobX.
+
+Render all different examples by changing index.tsx.
 
 =============
 
