@@ -1,38 +1,47 @@
-import React                                      from 'react';
-import { observable, computed } from 'mobx';
-import { observer }             from 'mobx-react';
+import React                            from 'react';
+import { observable, computed, action } from 'mobx';
+import { observer }                     from 'mobx-react';
 
 class TemperatureStore {
   constructor(t: number) {
-    this._temperatureCelsius = t;
+    this.temperatureCelsius = t;
   }
 
   id = Math.random();
-  @observable _unit = "C";
-  @observable _temperatureCelsius: number;
+  @observable unit = "C";
+  @observable temperatureCelsius: number;
 
   @computed get temperatureKelvin() {
-    return this._temperatureCelsius + 273.15;
+    return this.temperatureCelsius + 273.15;
   }
 
   @computed get temperatureFahrenheit() {
-    return this._temperatureCelsius * (9/5) + 32;
+    return this.temperatureCelsius * (9/5) + 32;
   }
 
   @computed get temperature() {
-    switch (this._unit) {
+    switch (this.unit) {
       case "K": return this.temperatureKelvin + "K";
       case "F": return this.temperatureFahrenheit + "F";
-      default: return this._temperatureCelsius + "C";
+      default: return this.temperatureCelsius + "C";
     }
   }
 
-  set unit(u: string) {
-    this._unit = u;
+  @action setUnit = (u: string) => {
+    this.unit = u;
   }
 
-  set temperatureCelsius(t: number) {
-    this._temperatureCelsius = t;
+  @action setCelsius = (t: number) => {
+    this.temperatureCelsius = t;
+  }
+
+  @action setTemperatureAndUnit = (degrees: number, unit: string) => {
+    this.setCelsius(degrees);
+    this.setUnit(unit);
+  }
+
+  @action increment = () => {
+    this.setCelsius(this.temperatureCelsius + 1);
   }
 }
 
@@ -46,26 +55,28 @@ const mapTemps = observable.map({
   "Rome": new TemperatureStore(30)
 });
 
-const Temperatures = observer(({temperatures, mapTemperatures}) => {
-  return (
-    <div>
-      <div>With an array</div>
-      {temperatures.map((t: TemperatureStore) => (
-        <div key={t.id}>{t.temperature}</div>
-      ))}
-      <div>With a map</div>
-      {mapTemperatures.forEach((city: string, t: TemperatureStore) => {
-        return (
-          <div key={t.id}>{city}: {t.temperature}</div>
-        )
-      })}
-    </div>
-  )
-});
+const Temperatures = observer(({temperatures, mapTemperatures}) => (
+  <div>
+    <div>With an array</div>
+    {temperatures.map((t: TemperatureStore) => (
+      <SingleTemperature key={t.id} temperature={t}/>
+    ))}
+    <div>With a map</div>
+    {[...mapTemperatures].map(([key, value]) => (
+      <div key={value.id}>{key}: {value.temperature}</div>
+    ))}
+  </div>
+));
+
+const SingleTemperature = observer(({ temperature}) => (
+  <div onClick={temperature.increment}>{temperature.temperature}</div>
+));
 
 const TemperaturesApp: React.FC = () => {
   return (
-    <Temperatures temperatures={temps} mapTemperatures={mapTemps} />
+    <div>
+      <Temperatures temperatures={temps} mapTemperatures={mapTemps} />
+    </div>
   );
 };
 
